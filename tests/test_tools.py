@@ -39,20 +39,17 @@ def test_lecture_summary():
     assert "まだありません" in tools.get_lecture_summary(99)
 
 
-def test_make_quiz_returns_question_and_definition(monkeypatch):
-    monkeypatch.setattr(
-        tools.random,
-        "choice",
-        lambda terms: next(term for term in terms if term["term"] == "PEFT"),
-    )
+def test_make_quiz_returns_a_term_from_the_requested_lecture(monkeypatch):
+    terms = [entry for entry in tools.load_glossary() if entry["lecture"] == 2]
+    selected = terms[0]
+    monkeypatch.setattr(tools.random, "choice", lambda entries: selected)
 
     quiz = json.loads(tools.make_quiz(2))
 
-    assert quiz["question"] == "「PEFT」の意味は？"
-    assert quiz["answer"] == next(
-        term["definition"] for term in tools.load_glossary()
-        if term["lecture"] == 2 and term["term"] == "PEFT"
-    )
+    assert quiz == {
+        "question": f"「{selected['term']}」の意味は？",
+        "answer": selected["definition"],
+    }
 
 
 def test_make_quiz_reports_when_lecture_has_no_terms():
